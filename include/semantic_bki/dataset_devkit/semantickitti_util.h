@@ -25,7 +25,8 @@ class SemanticKITTIData {
       , resolution_(resolution)
       , ds_resolution_(ds_resolution)
       , free_resolution_(free_resolution)
-      , max_range_(max_range) {
+      , max_range_(max_range)
+      , num_class_(num_class) {
         map_ = new semantic_bki::SemanticBKIOctoMap(resolution, block_depth, num_class, sf2, ell, prior, var_thresh, free_thresh, occupied_thresh);
         m_pub_ = new semantic_bki::MarkerArrayPub(nh_, map_topic, resolution);
       	init_trans_to_ground_ << 1, 0, 0, 0,
@@ -108,14 +109,26 @@ class SemanticKITTIData {
     }
 
     void publish_map() {
+      float max_var = std::numeric_limits<float>::min();
+      float min_var = std::numeric_limits<float>::max(); 
       m_pub_->clear_map(resolution_);
       for (auto it = map_->begin_leaf(); it != map_->end_leaf(); ++it) {
         if (it.get_node().get_state() == semantic_bki::State::OCCUPIED) {
           semantic_bki::point3f p = it.get_loc();
           m_pub_->insert_point3d_semantics(p.x(), p.y(), p.z(), it.get_size(), it.get_node().get_semantics(), 2);
+          int semantics = it.get_node().get_semantics();
+          std::vector<float> vars(num_class_);
+          it.get_node().get_vars(vars);
+          if (vars[semantics] > max_var)
+            max_var = vars[semantics];
+          if (vars[semantics] < min_var)
+            min_var = vars[semantics];
         }
       }
       m_pub_->publish();
+      // std::cout << "max_var: " << max_var << std::endl;
+      // std::cout << "min_var: " << min_var << std::endl;
+
     }
 
     void set_up_evaluation(const std::string gt_label_dir, const std::string evaluation_result_dir) {
@@ -151,7 +164,8 @@ class SemanticKITTIData {
                        0.999977309828677, -0.001805528627661, -0.006496203536139, -0.333996806443304,
                        0                ,  0                ,  0                ,  1.000000000000000;
       
-      Eigen::Matrix4d new_transform = transform * calibration;
+      // Eigen::Matrix4d new_transform = transform * calibration;
+      Eigen::Matrix4d new_transform = init_trans_to_ground_ * transform * calibration; 
       pcl::transformPointCloud (*cloud, *cloud, new_transform);
 
       std::ofstream result_file;
@@ -166,6 +180,43 @@ class SemanticKITTIData {
       result_file.close();
     }
 
+    void read_labelfile(std::string input_label_dir) {
+
+      std::string label_name = input_label_dir + "000000.label";
+      // std::cout<<"1"<<std::endl;
+      FILE* fp_label = std::fopen(label_name.c_str(), "r");
+      if (!fp_label) {
+        std::perror("File opening failed");
+      }
+      std::fseek(fp_label, 0L, SEEK_END);
+      std::rewind(fp_label);
+      for (int i = 0; i < 100; ++i)
+      {          
+        std::uint32_t buf;
+        if(fread((char *)&buf, sizeof(buf), 1, fp_label)==0) {return;}
+        unsigned char bytes[4];
+        bytes[0] = (buf >> 24) & 0xFF;
+        bytes[1] = (buf >> 16) & 0xFF;
+        bytes[2] = (buf >> 8) & 0xFF;
+        bytes[3] = buf & 0xFF;
+        std::cout << "label: ";
+        for (int j = 0; j < 4; ++j)
+        {
+          std::cout << (bytes[j] & 0xFF) << " - ";
+        }
+        std::cout << std::endl;
+        // std::cout << unsigned(buf) << std::endl;
+        // std::cout << (buf & 0xFF) << std::endl;
+      }
+      // for (int i = 0; i < 4; ++i)
+      // {
+      //   std::cout <<   << buf[i] << " - ";
+      // }
+      // std::cout << std::endl;
+
+      std::fclose(fp_label);
+    }
+
   
   private:
     ros::NodeHandle nh_;
@@ -173,6 +224,7 @@ class SemanticKITTIData {
     double ds_resolution_;
     double free_resolution_;
     double max_range_;
+    int num_class_;
     semantic_bki::SemanticBKIOctoMap* map_;
     semantic_bki::MarkerArrayPub* m_pub_;
     ros::Publisher color_octomap_publisher_;
@@ -215,6 +267,7 @@ class SemanticKITTIData {
         if (fread(&intensity, sizeof(float), 1, fp) == 0) break;
         if (fread(&point.label, sizeof(float), 1, fp_label) == 0) break;
         pc->push_back(point);
+        // std::cout << "label: "<< std::hex << point.label << std::endl;
       }
       std::fclose(fp);
       std::fclose(fp_label);

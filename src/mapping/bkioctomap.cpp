@@ -341,6 +341,7 @@ namespace semantic_bki {
                     // Only need to update if kernel density total kernel density est > 0
                     //if (kbar[j] > 0.0)
                     node.update(ybars[j]);
+                    // std::cout << "update done!!! " << std::endl;
                 }
             }
         }

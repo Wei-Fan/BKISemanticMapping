@@ -91,6 +91,7 @@ int main(int argc, char **argv) {
     semantic_kitti_data.read_lidar_poses(dir + '/' + lidar_pose_file);
     semantic_kitti_data.set_up_evaluation(dir + '/' + gt_label_prefix, dir + '/' + evaluation_result_prefix);
     semantic_kitti_data.process_scans(dir + '/' + input_data_prefix, dir + '/' + input_label_prefix, scan_num, query, visualize);
+    // semantic_kitti_data.read_labelfile(dir + '/' + input_label_prefix);
 
     ros::spin();
     return 0;
