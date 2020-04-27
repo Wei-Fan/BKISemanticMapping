@@ -62,7 +62,7 @@ class SemanticKITTIData {
 
     bool process_scans(std::string input_data_dir, std::string input_label_dir, int scan_num, bool query, bool visualize) {
       semantic_bki::point3f origin;
-      for (int scan_id  = 0; scan_id < scan_num; ++scan_id) {
+      for (int scan_id  = 0; scan_id < scan_num; scan_id=scan_id+5) {
         char scan_id_c[256];
         sprintf(scan_id_c, "%06d", scan_id);
         std::string scan_name = input_data_dir + std::string(scan_id_c) + ".bin";
@@ -72,10 +72,10 @@ class SemanticKITTIData {
         Eigen::Matrix4d calibration;
         
         // 00-02: 2011_10_03_drive
-        //calibration << 0.000427680238558, -0.999967248494602, -0.008084491683471, -0.011984599277133,
-	      //	      -0.007210626507497,  0.008081198471645, -0.999941316450383, -0.054039847297480,
-	      //	       0.999973864590328,  0.000485948581039, -0.007206933692422, -0.292196864868591,
-	      //	       0                ,  0                ,  0                ,  1.000000000000000;
+        calibration << 0.000427680238558, -0.999967248494602, -0.008084491683471, -0.011984599277133,
+	      	      -0.007210626507497,  0.008081198471645, -0.999941316450383, -0.054039847297480,
+	      	       0.999973864590328,  0.000485948581039, -0.007206933692422, -0.292196864868591,
+	      	       0                ,  0                ,  0                ,  1.000000000000000;
         
         // 03: 2011_09_26_drive_0067
         //calibration << 0.000234773698147, -0.999944154543764, -0.010563477811052, -0.002796816941295,
@@ -84,10 +84,10 @@ class SemanticKITTIData {
         //               0                ,  0                ,  0                ,  1.000000000000000;
 
         // 04-10: 2011_09_30_drive
-        calibration <<  -0.001857739385241, -0.999965951350955, -0.008039975204516, -0.004784029760483,
-                        -0.006481465826011,  0.008051860151134, -0.999946608177406, -0.073374294642306,
-                         0.999977309828677, -0.001805528627661, -0.006496203536139, -0.333996806443304,
-       	                 0                ,  0                ,  0                ,  1.000000000000000;
+        // calibration <<  -0.001857739385241, -0.999965951350955, -0.008039975204516, -0.004784029760483,
+        //                 -0.006481465826011,  0.008051860151134, -0.999946608177406, -0.073374294642306,
+        //                  0.999977309828677, -0.001805528627661, -0.006496203536139, -0.333996806443304,
+       	//                  0                ,  0                ,  0                ,  1.000000000000000;
 	      
         Eigen::Matrix4d new_transform = init_trans_to_ground_ * transform * calibration;
         pcl::transformPointCloud (*cloud, *cloud, new_transform);
@@ -97,10 +97,10 @@ class SemanticKITTIData {
         map_->insert_pointcloud(*cloud, origin, ds_resolution_, free_resolution_, max_range_);
         std::cout << "Inserted point cloud at " << scan_name << std::endl;
         
-        if (query) {
-          for (int query_id = scan_id - 10; query_id >= 0 && query_id <= scan_id; ++query_id)
-          query_scan(input_data_dir, query_id);
-        }
+        // if (query) {
+        //   for (int query_id = scan_id - 10; query_id >= 0 && query_id <= scan_id; ++query_id)
+        //   query_scan(input_data_dir, query_id);
+        // }
 
         if (visualize)
 	        publish_map();
@@ -138,7 +138,7 @@ class SemanticKITTIData {
 
     void query_scan(std::string input_data_dir, int scan_id) {
       char scan_id_c[256];
-      sprintf(scan_id_c, "%06d", scan_id);
+      sprintf(scan_id_c, "%06d", scan_id=scan_id+5);
       std::string scan_name = input_data_dir + std::string(scan_id_c) + ".bin";
       std::string gt_name = gt_label_dir_ + std::string(scan_id_c) + ".label";
       std::string result_name = evaluation_result_dir_ + std::string(scan_id_c) + ".txt";
@@ -147,10 +147,10 @@ class SemanticKITTIData {
       Eigen::Matrix4d calibration;
       
       // 00-02: 2011_10_03_drive
-      //calibration << 0.000427680238558, -0.999967248494602, -0.008084491683471, -0.011984599277133,
-      //	      -0.007210626507497,  0.008081198471645, -0.999941316450383, -0.054039847297480,
-      //	       0.999973864590328,  0.000485948581039, -0.007206933692422, -0.292196864868591,
-      //	       0                ,  0                ,  0                ,  1.000000000000000;
+      calibration << 0.000427680238558, -0.999967248494602, -0.008084491683471, -0.011984599277133,
+      	      -0.007210626507497,  0.008081198471645, -0.999941316450383, -0.054039847297480,
+      	       0.999973864590328,  0.000485948581039, -0.007206933692422, -0.292196864868591,
+      	       0                ,  0                ,  0                ,  1.000000000000000;
       
       // 03: 2011_09_26_drive_0067
       //calibration << 0.000234773698147, -0.999944154543764, -0.010563477811052, -0.002796816941295,
@@ -159,10 +159,10 @@ class SemanticKITTIData {
       //               0                ,  0                ,  0                ,  1.000000000000000;
 
       // 04-10: 2011_09_30_drive
-      calibration <<  -0.001857739385241, -0.999965951350955, -0.008039975204516, -0.004784029760483,
-                      -0.006481465826011,  0.008051860151134, -0.999946608177406, -0.073374294642306,
-                       0.999977309828677, -0.001805528627661, -0.006496203536139, -0.333996806443304,
-                       0                ,  0                ,  0                ,  1.000000000000000;
+      // calibration <<  -0.001857739385241, -0.999965951350955, -0.008039975204516, -0.004784029760483,
+      //                 -0.006481465826011,  0.008051860151134, -0.999946608177406, -0.073374294642306,
+      //                  0.999977309828677, -0.001805528627661, -0.006496203536139, -0.333996806443304,
+      //                  0                ,  0                ,  0                ,  1.000000000000000;
       
       // Eigen::Matrix4d new_transform = transform * calibration;
       Eigen::Matrix4d new_transform = init_trans_to_ground_ * transform * calibration; 

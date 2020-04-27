@@ -10,7 +10,7 @@
     
     <node pkg="semantic_bki" type="semantickitti_node" name="semantickitti_node" output="screen">
 
-        <param name="dir" value="$(arg pkg)/data/dataset/sequences/04" />
+        <param name="dir" value="$(arg pkg)/data/dataset/sequences/06" />
         <!-- Load method configuration from file -->
         <rosparam file="$(arg method_config)/$(arg method).yaml" command="load" />
 

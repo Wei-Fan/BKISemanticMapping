@@ -7,11 +7,11 @@
 import numpy as np
 from sklearn.metrics import jaccard_score
 
-evaluation_folder = '/home/wade/catkin_ws/src/BKISemanticMapping/data/dataset/sequences/04/evaluations/'
+evaluation_folder = '/home/wade/catkin_ws/src/BKISemanticMapping/data/dataset/sequences/06/evaluations/'
 
 gt_all = np.array([])
 pred_all = np.array([])
-for i in range(60):
+for i in range(635):
     print(i)
     
     result = np.loadtxt(evaluation_folder + str(i).zfill(6) + '.txt', dtype=np.uint32)
